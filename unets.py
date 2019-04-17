@@ -4,7 +4,8 @@ import keras.layers as kl
 import keras.models as km
 import keras.optimizers as ko
 import keras.callbacks as kc
-
+import sys
+import os
 
 def lr_schedule(epoch):
     lr = 1e-4
@@ -19,6 +20,17 @@ def lr_schedule(epoch):
     print('Learning rate: ', lr)
     return lr
 
+on_gpu_server = True
+if (on_gpu_server == True):
+    sys.path.append("./libs/GPUtil/GPUtil")
+    import GPUtil
+    os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
+    gpus = GPUtil.getAvailable(order="first",limit=1,maxLoad=.2,maxMemory=.2)
+    if(len(gpus) > 0):
+        os.environ["CUDA_VISIBLE_DEVICES"]=str(gpus[0])
+    else:
+        print("No free GPU")
+        sys.exit()
 
 def unet(input_size):
     inputs = kl.Input(input_size)
@@ -138,9 +150,10 @@ checkpoint = kc.ModelCheckpoint(filepath=filepath,
 
 lr_scheduler = kc.LearningRateScheduler(lr_schedule)
 
+if os.path.isfile(filepath):
 
+    model.load_weights(filepath)
 
-model.load_weights('checkpoints_2.h5')
 model.fit_generator(train_generator, steps_per_epoch=(3041 - 305) // batch_size, epochs=200,
                     validation_data=test_generator, validation_steps=301 // 8, callbacks=[checkpoint, lr_scheduler])
 
