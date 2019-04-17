@@ -1,0 +1,9 @@
+#!/bin/bash
+#PBS -l nodes=n21:ppn=2
+#PBS -N Resnet
+#PBS -m e
+#PBS -l walltime=12:00:00
+cd $PBS_O_WORKDIR
+cd ~/CompVision/190415_semantic_segmentation/
+module load python cuda
+python3 unets.py > output.txt
